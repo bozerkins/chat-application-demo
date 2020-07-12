@@ -12,6 +12,11 @@ Chat window
 Message styling, distinguish messages between our user / other users
 Typing prompt
 
+For Frontend development to work, please install http-server (https://www.npmjs.com/package/http-server) and run it with 
+```
+npx http-server .
+```
+
 ## Back-end app
 
 Receive messages to the server

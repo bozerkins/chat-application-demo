@@ -1,0 +1,31 @@
+{
+  "description": "Simple web chat app",
+  "name": "web-chat-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "bootstrap": "^4.5.0",
+    "jquery": "^3.5.1",
+    "popper.js": "^1.16.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bozerkins/chat-application-demo.git"
+  },
+  "keywords": [
+    "javascript",
+    "chat",
+    "application",
+    "fun"
+  ],
+  "author": "Bogdans Ozerkins",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bozerkins/chat-application-demo/issues"
+  },
+  "homepage": "https://github.com/bozerkins/chat-application-demo#readme"
+}
