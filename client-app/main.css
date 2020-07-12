@@ -1,0 +1,9 @@
+html, body {
+    height: 100%;
+}
+.chat-controls {
+    position: absolute; bottom: 0;
+}
+.chat-message-cotnainer {
+
+}

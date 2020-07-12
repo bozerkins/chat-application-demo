@@ -1,9 +1,52 @@
-<!-- CSS only -->
-<link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css">
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<!-- JS, Popper.js, and jQuery -->
-<script src="node_modules\jquery\dist\jquery.slim.min.js"></script>
-<script src="node_modules\popper.js\dist\umd\popper.min.js"></script>
-<script src="node_modules\bootstrap\dist\js\bootstrap.min.js"></script>
+    <!-- CSS only -->
+    <link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css">
 
-Hello world!
+    <!-- CSS App files -->
+    <link rel="stylesheet" href="./main.css">
+</head>
+<body>
+    <div class="container h-100" style="position: relative;">
+        <h1 class="p-2 text-center">Web Chat Application - Stream 01</h1>
+        <div class="chat-message-cotnainer p-2"> <!-- chat window -->
+            <div class="chat-message w-100 p-1 clearfix">
+                <span class="alert alert-secondary float-left m-0">
+                    Someone's first chat message here!
+                </span>
+            </div>
+            <div class="chat-message w-100 p-1 clearfix">
+                <span class="alert alert-info float-right m-0">
+                    My first chat message here!
+                </span>
+            </div>
+            <div class="chat-message w-100 p-1 clearfix">
+                <span class="alert alert-secondary float-left m-0">
+                    Someone's first chat message here!
+                </span>
+            </div>
+            <div class="chat-message w-100 p-1 clearfix">
+                <span class="alert alert-secondary float-left m-0">
+                    Someone's first chat message here!
+                </span>
+            </div>
+        </div>
+        <div class="chat-controls p-2 w-100"> <!-- controls -->
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" id="basic-addon1">Chat Space</span>
+                </div>
+                <input type="text" class="form-control" placeholder="Write your messages ..." aria-label="Username" aria-describedby="basic-addon1">
+              </div>
+        </div>
+    </div>
+    
+    <!-- JS, Popper.js, and jQuery -->
+    <script src="node_modules\jquery\dist\jquery.slim.min.js"></script>
+    <script src="node_modules\popper.js\dist\umd\popper.min.js"></script>
+    <script src="node_modules\bootstrap\dist\js\bootstrap.min.js"></script>
+    <script src="./main.js"></script>
+</body>
