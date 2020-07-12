@@ -43,7 +43,6 @@ wss.on('connection', function connection(ws) {
         setTimeout(function() { checkLastMessages();}, 1000);
       }
       checkLastMessages();
-      
       break;
     }
   }
