@@ -11,41 +11,43 @@
 </head>
 <body>
     <div class="container h-100" style="position: relative;">
-        <h1 class="p-2 text-center">Web Chat Application - Stream 01</h1>
-        <div class="chat-message-cotnainer p-2"> <!-- chat window -->
-            <div class="chat-message w-100 p-1 clearfix">
-                <span class="alert alert-secondary float-left m-0">
-                    Someone's first chat message here!
-                </span>
-            </div>
-            <div class="chat-message w-100 p-1 clearfix">
-                <span class="alert alert-info float-right m-0">
-                    My first chat message here!
-                </span>
-            </div>
-            <div class="chat-message w-100 p-1 clearfix">
-                <span class="alert alert-secondary float-left m-0">
-                    Someone's first chat message here!
-                </span>
-            </div>
-            <div class="chat-message w-100 p-1 clearfix">
-                <span class="alert alert-secondary float-left m-0">
-                    Someone's first chat message here!
-                </span>
-            </div>
-        </div>
-        <div class="chat-controls p-2 w-100"> <!-- controls -->
+        <h1 class="p-2 text-center">
+            Web Chat Application - Stream 01
+            <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#usernameModal">
+                <span id="username"></span> (edit)
+            </button>
+        </h1>
+
+        <div class="chat-message-cotnainer p-2"></div> <!-- chat window -->
+        <div class="chat-controls p-2 w-100"> <!-- chat controls -->
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
-                  <span class="input-group-text" id="basic-addon1">Chat Space</span>
+                  <span class="input-group-text" id="usernameControlDisplay"></span>
                 </div>
-                <input type="text" class="form-control" placeholder="Write your messages ..." aria-label="Username" aria-describedby="basic-addon1">
+                <input type="text" id="chat-message-input" class="form-control" placeholder="Write your messages ..." aria-label="Username" aria-describedby="basic-addon1">
               </div>
         </div>
     </div>
     
+    <div class="modal fade" id="usernameModal" tabindex="-1" role="dialog" aria-labelledby="usernameModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-body">
+                <div class="alert alert-danger" id="usernameError" role="alert" style="display: none;"></div>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="usernameInput" placeholder="Enter your username" aria-label="Username" aria-describedby="basic-addon1">
+                  </div>
+                <div class="text-right">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="usernameSave">Save</button>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     <!-- JS, Popper.js, and jQuery -->
-    <script src="node_modules\jquery\dist\jquery.slim.min.js"></script>
+    <script src="node_modules\jquery\dist\jquery.min.js"></script>
     <script src="node_modules\popper.js\dist\umd\popper.min.js"></script>
     <script src="node_modules\bootstrap\dist\js\bootstrap.min.js"></script>
     <script src="./main.js"></script>

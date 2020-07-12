@@ -1,0 +1,5 @@
+[
+    {"message": "Good to see you today", "author": "Bogdans", "me": true},
+    {"message": "Srsly. I don't like you", "author": "Michael", "me": false},
+    {"message": ":(", "author": "Bogdans", "me": true}
+]

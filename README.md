@@ -17,6 +17,12 @@ For Frontend development to work, please install http-server (https://www.npmjs.
 npx http-server .
 ```
 
+### Fron-end app JavaScript
+
+Render messages
+Write the messages in the UI
+"Preserve history"
+
 ## Back-end app
 
 Receive messages to the server

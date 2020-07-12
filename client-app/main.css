@@ -5,5 +5,20 @@ html, body {
     position: absolute; bottom: 0;
 }
 .chat-message-cotnainer {
-
+}
+.chat-message {
+    position: relative;
+    margin-bottom: 10px;
+}
+.chat-message .chat-message-author  {
+    position: absolute;
+    bottom: -10px;
+    font-size: 10px;
+    color: gray;
+}
+.chat-author-not-me {
+    left: 5px;
+}
+.chat-author-me {
+    right: 5px;
 }
