@@ -6,6 +6,10 @@ A demo for Coding dummies stream &lt;3
 - Front-end app (for serving files to the client)
 - Back-end app (for chat message exchange func.)
 
+# Ports on dev
+For frontend - localhost:8080
+For backend websocket - localhost:8000
+
 ## Front-end app
 
 Chat window
