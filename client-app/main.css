@@ -4,8 +4,6 @@ html, body {
 .chat-controls {
     position: absolute; bottom: 0;
 }
-.chat-message-cotnainer {
-}
 .chat-message {
     position: relative;
     margin-bottom: 10px;

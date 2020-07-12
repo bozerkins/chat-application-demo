@@ -14,13 +14,15 @@ function renderMessage(name, isThisMe, message)
     $('.chat-message-cotnainer').first().append(rendered);
 }
 
-function inputEnterEvent(input)
+function inputEnterEvent(input, server)
 {
     const message = input.val();
     if (!message) {
         return;
     }
-    renderMessage(getUsername(), true, message);
+    server.send(JSON.stringify(
+        { message: message, me: true, author: getUsername() }
+    )); 
     input.val('');
 }
 
@@ -74,14 +76,14 @@ function loadMessages()
     return $.get('./messages.json');
 }
 
-function initControls()
+function initControls(server)
 {
     const input = $('#chat-message-input');
     input.focus();
     input.keyup(function(e) {
         if(e.keyCode == 13) // Enter
         {
-            inputEnterEvent(input);
+            inputEnterEvent(input, server);
         }
     });
 }
@@ -89,12 +91,31 @@ function initControls()
 function init()
 {
     initUsername();
-    loadMessages().then((messages) => {
+
+    const server = new WebSocket("ws://localhost:8000/");
+    let firstReceive = false;
+    server.onmessage = function(event) {
+        console.log(event.data);
+        // parse the payload
+        const payload = JSON.parse(event.data);
+        const username = getUsername();
+        let messages = payload.messages.map((message) => {
+            message.me = message.author === username;
+            return message;
+        });
+        // init message
+        messages.sort(function(a, b) {
+            return a.ts - b.ts;
+        });
         messages.forEach((message) => {
             renderMessage(message.author, message.me, message.message)
         });
-        initControls();
-    });
+        if (firstReceive === false) {
+            firstReceive = true;
+            initControls(server);
+        }
+        console.log(payload);
+    };
 }
 
 init();

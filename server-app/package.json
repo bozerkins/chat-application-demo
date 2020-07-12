@@ -1,0 +1,24 @@
+{
+  "name": "web-chat-server",
+  "version": "1.0.0",
+  "description": "simple nodejs websocket server",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bozerkins/chat-application-demo.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bozerkins/chat-application-demo/issues"
+  },
+  "homepage": "https://github.com/bozerkins/chat-application-demo#readme",
+  "dependencies": {
+    "read-last-lines": "^1.7.2",
+    "reverse-line-reader": "^0.2.6",
+    "ws": "^7.3.1"
+  }
+}
