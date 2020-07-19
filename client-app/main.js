@@ -21,59 +21,9 @@ function inputEnterEvent(input, server)
         return;
     }
     server.send(JSON.stringify(
-        { message: message, me: true, author: getUsername() }
+        { message: message, me: true, author: getUser()['cognito:username'] }
     )); 
     input.val('');
-}
-
-function initUsername()
-{
-    $('#username').text(getUsername());
-    $('#usernameControlDisplay').text('@' + getUsername());
-    $('#usernameInput').val(getUsername());
-    $('#usernameSave').click(function() {
-        const usernameError = $('#usernameError');
-        const usernameInputValue = $('#usernameInput').val();
-        if (!usernameInputValue) {
-            usernameError.text('Username should not be empty');
-            usernameError.show();
-        } else {
-            setUsername(usernameInputValue);
-            usernameError.hide();
-            $('#usernameModal').modal('hide');
-            
-            $('#username').text(getUsername());
-            $('#usernameControlDisplay').text('@' + getUsername());
-        }
-    });
-    if (hasUsername() === false) {
-        $('#usernameModal').modal('show');
-    }
-}
-
-function getUsername() {
-    let username = window.localStorage.getItem('username');
-    if (!username) {
-        return 'Anonymous';
-    }
-    return username;
-}
-
-function hasUsername() {
-    return getUsername() !== 'Anonymous';
-}
-
-function setUsername(username) {
-    window.localStorage.setItem('username', username);
-}
-
-function clearUsername() {
-    window.localStorage.clear();
-}
-
-function loadMessages()
-{
-    return $.get('./messages.json');
 }
 
 function initControls(server)
@@ -88,9 +38,50 @@ function initControls(server)
     });
 }
 
+function getCookie(cname) 
+{
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+function getUser()
+{
+    const idToken = getCookie('id_token');
+    if (!idToken) {
+        return null;
+    }
+    const decoded = jwt_decode(idToken);
+    if (!decoded) {
+        return null;
+    }
+    return decoded;
+}
+
 function init()
 {
-    initUsername();
+    const user = getUser();
+    if (user === null) {
+        window.location.href = 'http://localhost:8001/login';
+        return;
+    }
+
+    $('#username').text(user['cognito:username']);
+    $('#usernameControlDisplay').text('@' + user['cognito:username']);
+    $('#logoutButton').click(() => {
+        document.cookie = "id_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        window.location.reload();
+    });
 
     const server = new WebSocket("ws://localhost:8000/");
     let firstReceive = false;
@@ -98,7 +89,7 @@ function init()
         console.log(event.data);
         // parse the payload
         const payload = JSON.parse(event.data);
-        const username = getUsername();
+        const username = getUser()['cognito:username'];
         let messages = payload.messages.map((message) => {
             message.me = message.author === username;
             return message;

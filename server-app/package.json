@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/bozerkins/chat-application-demo#readme",
   "dependencies": {
+    "axios": "^0.19.2",
+    "dotenv": "^8.2.0",
     "read-last-lines": "^1.7.2",
     "reverse-line-reader": "^0.2.6",
     "ws": "^7.3.1"
