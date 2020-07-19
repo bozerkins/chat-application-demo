@@ -11,9 +11,7 @@ const jwkPromise = axios.get(`https://cognito-idp.us-east-1.amazonaws.com/${proc
 const jwt = require('jsonwebtoken');
 const jwkToPem = require('jwk-to-pem');
 
-let messages = [
-  {"id": 0, "author": "Undefined", "message": "Welcome to the Web Chat app", "ts": 1594580850602},
-];
+let messages = [{"id":0,"author":"Undefined","sub":"none","message":"Welcome to the Web Chat app","ts":1594580850602},{"message":"Hello!","ts":1595182130474,"id":1,"author":"bozerkins","sub":"f898d26c-6d78-44a9-9d6d-e875d26481b7"},{"message":"Hello to you too :)","ts":1595182236320,"id":2,"author":"bozerkins2","sub":"9311a4bd-f57b-411b-b6fc-2d07e7d2f6a2"},{"message":"Nice to see you :P","ts":1595182253293,"id":3,"author":"bozerkins","sub":"f898d26c-6d78-44a9-9d6d-e875d26481b7"},{"message":"You too :D","ts":1595182259397,"id":4,"author":"bozerkins2","sub":"9311a4bd-f57b-411b-b6fc-2d07e7d2f6a2"},{"message":"Test","ts":1595182275679,"id":5,"author":"bozerkins","sub":"f898d26c-6d78-44a9-9d6d-e875d26481b7"},{"message":"Message","ts":1595182277174,"id":6,"author":"bozerkins","sub":"f898d26c-6d78-44a9-9d6d-e875d26481b7"},{"message":"Please don't ","ts":1595182280258,"id":7,"author":"bozerkins","sub":"f898d26c-6d78-44a9-9d6d-e875d26481b7"},{"message":"Restart","ts":1595182281474,"id":8,"author":"bozerkins","sub":"f898d26c-6d78-44a9-9d6d-e875d26481b7"},{"message":"The server","ts":1595182283084,"id":9,"author":"bozerkins","sub":"f898d26c-6d78-44a9-9d6d-e875d26481b7"},{"message":"Please ","ts":1595182284330,"id":10,"author":"bozerkins","sub":"f898d26c-6d78-44a9-9d6d-e875d26481b7"},{"message":"Pretty please","ts":1595182286239,"id":11,"author":"bozerkins","sub":"f898d26c-6d78-44a9-9d6d-e875d26481b7"},{"message":"OKay okat","ts":1595182289082,"id":12,"author":"bozerkins2","sub":"9311a4bd-f57b-411b-b6fc-2d07e7d2f6a2"}];
 let messageCounter = messages.length;
 
 function getCookie(request, cname) 
@@ -32,7 +30,7 @@ function getCookie(request, cname)
     }
     return "";
 }
-async function authenticate(request, callback)
+function authenticate(request, callback)
 {
   const idToken = getCookie(request, 'id_token');
   if (!idToken) {
@@ -42,15 +40,28 @@ async function authenticate(request, callback)
   jwkPromise.then((jwk) => {
     jwt.verify(idToken, jwkToPem(jwk.keys[0]), { algorithms: ['RS256'] }, function(err, decodedToken) {
       if (err) {
-        callback({error: err});
-        return;
+        return callback({error: err});
       }
+      // verify the claims
+      if (decodedToken.exp <= (new Date().getTime() / 1000)) {
+        return callback({error: "The token has expired"});
+      }
+      if (decodedToken.aud !== process.env.COGNITO_CLIENT_ID) {
+        return callback({error: "Cognito Audience does not match"});
+      }
+      if (decodedToken.iss !== `https://cognito-idp.us-east-1.amazonaws.com/${process.env.COGNITO_USER_POOL_ID}`) {
+        return callback({error: "Cognito Issuer does not match"});
+      }
+      if (decodedToken.token_use !== 'id') {
+        return callback({error: "Invalid token use"});
+      }
+      // claims OK. finish the handshake
       callback(null, decodedToken);
     });
   });
 };
 
-wss.on('connection', function connection(ws, request, client) {
+wss.on('connection', function connection(ws, request, user) {
   // init
   let lineCounter = 0;
   let lines = [];
@@ -61,12 +72,14 @@ wss.on('connection', function connection(ws, request, client) {
     lines.push(message);
 
     let isFirstMessage = i === 0;
-    if (isFirstMessage || lineCounter > 10) {
+    if (isFirstMessage || lineCounter > 15) {
       ws.send(JSON.stringify({messages: lines}));
       ws.on('message', function (messageEncoded) {
           let message = JSON.parse(messageEncoded);
           message.ts = new Date().getTime();
           message.id = messageCounter++;
+          message.author = user['cognito:username'];
+          message.sub = user.sub;
           messages.push(message);
           console.log('Messages ' + JSON.stringify(messages));
       });
@@ -107,7 +120,7 @@ server.on('upgrade', function upgrade(request, socket, head) {
 server.listen(8000);
 
 const url = require('url');
-const qs = require('querystring')
+const qs = require('querystring');
 
 http.createServer(function (req, res) {
   let request = url.parse(req.url, true);

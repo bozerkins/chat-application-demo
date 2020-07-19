@@ -11,7 +11,7 @@ function renderMessage(name, isThisMe, message)
             <span class="chat-message-author ${authorFloat}">${name}</span>
         </div>
     `;
-    $('.chat-message-cotnainer').first().append(rendered);
+    $('.chat-message-container').first().append(rendered);
 }
 
 function inputEnterEvent(input, server)
@@ -21,9 +21,12 @@ function inputEnterEvent(input, server)
         return;
     }
     server.send(JSON.stringify(
-        { message: message, me: true, author: getUser()['cognito:username'] }
-    )); 
+        { message: message }
+    ));
     input.val('');
+    // scroll to bottom
+    const container = $('.chat-message-container');
+    container.scrollTop(container.prop("scrollHeight"));
 }
 
 function initControls(server)
@@ -83,15 +86,25 @@ function init()
         window.location.reload();
     });
 
+    let autoscroll = true;
+    $('.chat-message-container').scroll(function() {
+        let atTheBottom = ($(this).prop("scrollHeight") - Math.floor($(this).scrollTop() + $(this).outerHeight())) === 0;
+        if (atTheBottom === false) {
+            autoscroll = false;
+        } else {
+            autoscroll = true;
+        }
+    });
+
     const server = new WebSocket("ws://localhost:8000/");
     let firstReceive = false;
     server.onmessage = function(event) {
         console.log(event.data);
         // parse the payload
         const payload = JSON.parse(event.data);
-        const username = getUser()['cognito:username'];
+        const sub = getUser().sub;
         let messages = payload.messages.map((message) => {
-            message.me = message.author === username;
+            message.me = message.sub === sub;
             return message;
         });
         // init message
@@ -99,8 +112,13 @@ function init()
             return a.ts - b.ts;
         });
         messages.forEach((message) => {
-            renderMessage(message.author, message.me, message.message)
+            renderMessage(`${message.author} (${message.sub})`, message.me, message.message)
         });
+        // scroll to bottom
+        if (autoscroll === true) {
+            const container = $('.chat-message-container');
+            container.scrollTop(container.prop("scrollHeight"));
+        }
         if (firstReceive === false) {
             firstReceive = true;
             initControls(server);
