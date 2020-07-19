@@ -1,13 +1,56 @@
-const result = require('dotenv').config({ path: __dirname + '/../.env' });
+require('dotenv').config({ path: __dirname + '/../.env' });
+const http = require('http');
 const WebSocket = require('ws');
-const lineReader = require('reverse-line-reader');
-const wss = new WebSocket.Server({ port: 8000 });
+const server = http.createServer();
+const wss = new WebSocket.Server({ noServer: true });
+
+const axios = require('axios');
+const jwkPromise = axios.get(`https://cognito-idp.us-east-1.amazonaws.com/${process.env.COGNITO_USER_POOL_ID}/.well-known/jwks.json`)
+  .then((response) => response.data)
+  .catch((error) => console.log(error));
+const jwt = require('jsonwebtoken');
+const jwkToPem = require('jwk-to-pem');
+
 let messages = [
   {"id": 0, "author": "Undefined", "message": "Welcome to the Web Chat app", "ts": 1594580850602},
 ];
 let messageCounter = messages.length;
 
-wss.on('connection', function connection(ws) {
+function getCookie(request, cname) 
+{
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(request.headers.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+async function authenticate(request, callback)
+{
+  const idToken = getCookie(request, 'id_token');
+  if (!idToken) {
+    callback({error: "No valid token was provided"});
+    return;
+  }
+  jwkPromise.then((jwk) => {
+    jwt.verify(idToken, jwkToPem(jwk.keys[0]), { algorithms: ['RS256'] }, function(err, decodedToken) {
+      if (err) {
+        callback({error: err});
+        return;
+      }
+      callback(null, decodedToken);
+    });
+  });
+};
+
+wss.on('connection', function connection(ws, request, client) {
   // init
   let lineCounter = 0;
   let lines = [];
@@ -47,10 +90,23 @@ wss.on('connection', function connection(ws) {
     }
   }
 });
+server.on('upgrade', function upgrade(request, socket, head) {
+  authenticate(request, (err, client) => {
+    if (err || !client) {
+      console.log(err, client);
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+      socket.destroy();
+      return;
+    }
 
-const http = require('http');
+    wss.handleUpgrade(request, socket, head, function done(ws) {
+      wss.emit('connection', ws, request, client);
+    });
+  });
+});
+server.listen(8000);
+
 const url = require('url');
-const axios = require('axios');
 const qs = require('querystring')
 
 http.createServer(function (req, res) {
@@ -115,5 +171,4 @@ http.createServer(function (req, res) {
     res.write('You page was not found');
     res.end();
   }
-  
 }).listen(8001);
