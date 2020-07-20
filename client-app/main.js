@@ -20,9 +20,10 @@ function inputEnterEvent(input, server)
     if (!message) {
         return;
     }
-    server.send(JSON.stringify(
+    let resp = server.send(JSON.stringify(
         { message: message }
     ));
+    console.log(resp);
     input.val('');
     // scroll to bottom
     const container = $('.chat-message-container');
@@ -97,33 +98,25 @@ function init()
     });
 
     const server = new WebSocket("ws://localhost:8000/");
-    let firstReceive = false;
+    initControls(server);
+
     server.onmessage = function(event) {
         console.log(event.data);
-        // parse the payload
-        const payload = JSON.parse(event.data);
-        const sub = getUser().sub;
-        let messages = payload.messages.map((message) => {
-            message.me = message.sub === sub;
-            return message;
-        });
-        // init message
-        messages.sort(function(a, b) {
-            return a.ts - b.ts;
-        });
-        messages.forEach((message) => {
-            renderMessage(`${message.author} (${message.sub})`, message.me, message.message)
-        });
+
+        const message = JSON.parse(event.data);
+        message.me = message.sub ===  getUser().sub;
+
+        renderMessage(`${message.author} (${message.sub})`, message.me, message.message)
+
         // scroll to bottom
         if (autoscroll === true) {
             const container = $('.chat-message-container');
             container.scrollTop(container.prop("scrollHeight"));
         }
-        if (firstReceive === false) {
-            firstReceive = true;
-            initControls(server);
-        }
-        console.log(payload);
+    };
+
+    server.onerror = function(error) {
+        console.log(error);
     };
 }
 
