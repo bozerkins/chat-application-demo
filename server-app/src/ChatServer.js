@@ -27,12 +27,16 @@ module.exports = class ChatServer {
         this.server.on('upgrade', (this.onUpgrade).bind(this));
         this.server.listen(port)
 
-        this.sends = [];
+        this.last = [];
     }
 
     onConnection(ws, request, user)
     {
         console.log('New connection established', user);
+
+        this.last.forEach(message => {
+          ws.send(message);
+        });
 
         ws.on('message', (messageEncoded) => {
 
@@ -41,7 +45,9 @@ module.exports = class ChatServer {
             message.ts = new Date().getTime();
             message.author = user['cognito:username'];
             message.sub = user.sub;
-            
+
+            this.last.push(JSON.stringify(message));
+            this.last = this.last.splice(-10,10);
             this.broadcast(JSON.stringify(message));
         });
     }
