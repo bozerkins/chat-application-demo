@@ -72,6 +72,26 @@ function getUser()
     return decoded;
 }
 
+function createPicker()
+{
+    const button = document.querySelector('#emoji-button');
+    const picker = new EmojiButton({
+        autoFocusSearch: false,
+        showSearch: false,
+        autoHide: false
+    });
+   
+    picker.on('emoji', emoji => {
+        const input = $('#chat-message-input');
+        input.val(input.val() + emoji);
+        input.focus();
+    });
+   
+    button.addEventListener('click', () => {
+      picker.togglePicker(button);
+    });
+}
+
 function init()
 {
     const user = getUser();
@@ -86,6 +106,8 @@ function init()
         document.cookie = "id_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         window.location.reload();
     });
+    
+    createPicker();
 
     let autoscroll = true;
     $('.chat-message-container').scroll(function() {

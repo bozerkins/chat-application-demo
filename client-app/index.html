@@ -5,7 +5,6 @@
 
     <!-- CSS only -->
     <link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css">
-
     <!-- CSS App files -->
     <link rel="stylesheet" href="./main.css">
 </head>
@@ -26,7 +25,10 @@
                     <span class="input-group-text" id="usernameControlDisplay"></span>
                 </div>
                 <input type="text" id="chat-message-input" class="form-control" placeholder="Write your messages ..." aria-label="Username" aria-describedby="basic-addon1">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-light btn-sm" id="emoji-button"> 😀</button>
                 </div>
+            </div>
         </div>
     </div>
   
@@ -35,5 +37,6 @@
     <script src="node_modules\popper.js\dist\umd\popper.min.js"></script>
     <script src="node_modules\bootstrap\dist\js\bootstrap.min.js"></script>
     <script src="node_modules\jwt-decode\build\jwt-decode.min.js"></script>
-    <script src="./main.js"></script>
+    <script src="node_modules/@joeattardi/emoji-button/dist/index.js"></script>
+    <script src="./main.js" type="module"></script>
 </body>
