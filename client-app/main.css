@@ -24,6 +24,23 @@ html, body {
 .chat-message-container {
     overflow: auto;
 }
+.chat-message-overlay {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(255,255,255,.8);
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+}
+.chat-message-overlay #loading-screen {
+    display: none;
+}
+.chat-message-overlay #error-screen {
+    display: none;
+}
+
 /* width */
 ::-webkit-scrollbar {
     width: 7px;

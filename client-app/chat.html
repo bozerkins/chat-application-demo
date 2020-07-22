@@ -32,6 +32,24 @@
             </div>
         </div>
     </div>
+    
+    <div class="chat-message-overlay align-items-center justify-content-center" id="chat-overlay">
+        <div id="loading-screen">
+            <button class="btn btn-primary" type="button" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Loading...
+            </button>
+        </div>
+        <div id="error-screen">
+            <button class="btn btn-danger" type="button" disabled>
+                Error in connecting to the server...
+            </button>
+            <div class="btn-group">
+                <button class="btn btn-primary" type="button" id="chat-retry">Retry</button>
+                <button class="btn btn-link" type="button" id="chat-close">Close</button>
+            </div>
+        </div>
+    </div>
   
     <!-- JS, Popper.js, and jQuery -->
     <script src="node_modules/jquery/dist/jquery.min.js"></script>
@@ -39,5 +57,5 @@
     <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="node_modules/jwt-decode/build/jwt-decode.min.js"></script>
     <script src="node_modules/@joeattardi/emoji-button/dist/index.js"></script>
-    <script src="./main.js" type="module"></script>
+    <script src="./src/main.js" type="module"></script>
 </body>

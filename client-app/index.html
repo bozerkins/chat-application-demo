@@ -10,6 +10,10 @@
 </head>
 <body>
     <div class="container mb-3">
+        <h3 class="login-buttons">
+            <button type="button" class="btn btn-secondary btn-sm" disabled> @<span id="username"></span></button>
+            <button type="button" class="btn btn-light btn-sm" id="logoutButton"> logout</button>
+        </h3>
         This page will contain
         <ul>
             <li>Overview of chats current user participate in</li>
@@ -31,4 +35,20 @@
     <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="node_modules/jwt-decode/build/jwt-decode.min.js"></script>
     <!-- ... -->
+    <script type="module">
+        import { getUser } from './src/utils.js';
+
+        let user = getUser();
+
+        if (user === null) {
+            $('.login-buttons').hide();
+        } else {
+            $('#username').text(user['cognito:username']);
+            $('#usernameControlDisplay').text('@' + user['cognito:username']);
+            $('#logoutButton').click(() => {
+                document.cookie = "id_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                window.location.reload();
+            });
+        }
+    </script>
 </body>
