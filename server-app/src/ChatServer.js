@@ -10,10 +10,6 @@ module.exports = class ChatServer {
         this.jwk = axios.get(`https://cognito-idp.us-east-1.amazonaws.com/${process.env.COGNITO_USER_POOL_ID}/.well-known/jwks.json`)
             .then((response) => response.data)
             .catch((error) => console.log(error));
-        
-            
-        const server = http.createServer();
-        const wss = new WebSocket.Server({ noServer: true });
     }
 
     start(port)
@@ -33,32 +29,39 @@ module.exports = class ChatServer {
     onConnection(ws, request, user)
     {
         console.log('New connection established', user);
+        ws.user = user;
 
         this.last.forEach(message => {
           ws.send(message);
         });
+        // TODO: manage active client list properly
+        this.wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({type: 'usr', payload: {sub: client.user.sub, name: client.user['cognito:username']}}));
+          }
+        });
 
         ws.on('message', (messageEncoded) => {
-
             console.log('New message received', messageEncoded);
             let message = JSON.parse(messageEncoded);
             message.ts = new Date().getTime();
             message.author = user['cognito:username'];
             message.sub = user.sub;
 
-            this.last.push(JSON.stringify(message));
-            this.last = this.last.splice(-10,10);
-            this.broadcast(JSON.stringify(message));
+            let broadcast = JSON.stringify({type: 'msg', payload: message});
+            this.last.push(broadcast);
+            this.last = this.last.splice(-15,15);
+            this.broadcast(broadcast);
         });
     }
 
-    broadcast(message)
+    broadcast(payload)
     {
-        this.wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
+      this.wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(payload);
+        }
+      });
     }
 
     onUpgrade(request, socket, head)

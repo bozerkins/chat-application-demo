@@ -21,8 +21,12 @@ html, body {
 .chat-author-me {
     right: 5px;
 }
+.chat-container {
+    overflow: hidden;
+}
 .chat-message-container {
     overflow: auto;
+    height: 100%;
 }
 .chat-message-overlay {
     display: flex;
