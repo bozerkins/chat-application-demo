@@ -14,7 +14,7 @@ import { Socket } from './Socket.js';
     //create the chat room
     let chatRoom = new ChatRoom(user);
     let overlay = new Overlay();
-    let socket = new Socket("ws://localhost:8000/");
+    let socket = new Socket("ws://localhost:8000/join?room=RandomChatRoom");
     socket.bindOpen((event) => {
         overlay.hide();
         chatRoom.render();
@@ -32,7 +32,12 @@ import { Socket } from './Socket.js';
         if (payload.type === 'usr') {
             chatRoom.renderUser(payload.payload);
         }
-        
+        if (payload.type === 'out') {
+            chatRoom.removeUser(payload.payload);
+        }
+        if (payload.type === 'chat') {
+            chatRoom.renderChatRoomName(payload.payload);
+        }
     });
     
     overlay.bindRetry((event) => {

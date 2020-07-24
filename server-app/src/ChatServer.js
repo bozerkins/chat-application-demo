@@ -1,8 +1,9 @@
-const WebSocket = require('ws');
 const http = require('http');
+const url = require('url');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const jwkToPem = require('jwk-to-pem');
+const ChatRoom = require('./ChatRoom.js');
 
 module.exports = class ChatServer {
     constructor()
@@ -16,52 +17,20 @@ module.exports = class ChatServer {
     {
         console.log('Starting ChatServer at ' + port);
 
-        this.wss = new WebSocket.Server({ noServer: true });
-        this.wss.on('connection', (this.onConnection).bind(this));
-
         this.server = http.createServer();
         this.server.on('upgrade', (this.onUpgrade).bind(this));
         this.server.listen(port)
 
-        this.last = [];
+        this.rooms = {};
     }
 
-    onConnection(ws, request, user)
+    chooseChatRoom(chatRoomId)
     {
-        console.log('New connection established', user);
-        ws.user = user;
-
-        this.last.forEach(message => {
-          ws.send(message);
-        });
-        // TODO: manage active client list properly
-        this.wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify({type: 'usr', payload: {sub: client.user.sub, name: client.user['cognito:username']}}));
-          }
-        });
-
-        ws.on('message', (messageEncoded) => {
-            console.log('New message received', messageEncoded);
-            let message = JSON.parse(messageEncoded);
-            message.ts = new Date().getTime();
-            message.author = user['cognito:username'];
-            message.sub = user.sub;
-
-            let broadcast = JSON.stringify({type: 'msg', payload: message});
-            this.last.push(broadcast);
-            this.last = this.last.splice(-15,15);
-            this.broadcast(broadcast);
-        });
-    }
-
-    broadcast(payload)
-    {
-      this.wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(payload);
+        if (this.rooms.hasOwnProperty(chatRoomId) === false) {
+            this.rooms[chatRoomId] =  new ChatRoom(chatRoomId, chatRoomId); // TODO: add nchat room name
+            console.log('creating new chatroom: ' + chatRoomId);
         }
-      });
+        return this.rooms[chatRoomId];
     }
 
     onUpgrade(request, socket, head)
@@ -73,10 +42,20 @@ module.exports = class ChatServer {
                 socket.destroy();
                 return;
             }
+
+            const requestDetails = url.parse(request.url, true);
+            if (requestDetails.pathname === '/join') {
+              let chatRoomId = requestDetails.query.room ? requestDetails.query.room : 'default';
+              let chatRoom = this.chooseChatRoom(chatRoomId);
+              chatRoom.wss
+                .handleUpgrade(request, socket, head, (ws) => {
+                    chatRoom.wss.emit('connection', ws, request, client);
+                });
+            } else {
+              socket.destroy();
+            }
         
-            this.wss.handleUpgrade(request, socket, head, (ws) => {
-                this.wss.emit('connection', ws, request, client);
-            });
+            
         });
     }
 

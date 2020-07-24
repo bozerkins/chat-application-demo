@@ -42,6 +42,11 @@ export class ChatRoom
         });
     }
 
+    renderChatRoomName(chatRoom)
+    {
+        $('#chat-room-name').text(chatRoom.name);
+    }
+
     renderMessage(message)
     {
         const name = `${message.author} (${message.sub})`;
@@ -70,12 +75,18 @@ export class ChatRoom
     renderUser(user)
     {
         const rendered = `
-            <div class="p-1 clearfix">
+            <div class="p-1 clearfix" id="chat-badge-${user.sub}">
                 ${user.name}
                 <span class="badge badge-light">${user.sub}</span>
             </div>
         `;
         $('.chat-username-container').first().append(rendered);
+    }
+
+    removeUser(user) 
+    {
+        let userElement = $(`#chat-badge-${user.sub}`);
+        userElement.remove();
     }
 
     startControls(socket)
