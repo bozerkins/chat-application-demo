@@ -11,10 +11,13 @@ import { Socket } from './Socket.js';
         return;
     }    
 
+    let searchParams = new URLSearchParams(window.location.search)
+    let roomId = searchParams.get('id');
+
     //create the chat room
     let chatRoom = new ChatRoom(user);
     let overlay = new Overlay();
-    let socket = new Socket("ws://localhost:8000/join?room=RandomChatRoom");
+    let socket = new Socket("ws://localhost:8000/join?id="+roomId);
     socket.bindOpen((event) => {
         overlay.hide();
         chatRoom.render();

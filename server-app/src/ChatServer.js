@@ -4,6 +4,7 @@ const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const jwkToPem = require('jwk-to-pem');
 const ChatRoom = require('./ChatRoom.js');
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = class ChatServer {
     constructor()
@@ -17,20 +18,24 @@ module.exports = class ChatServer {
     {
         console.log('Starting ChatServer at ' + port);
 
-        this.server = http.createServer();
+        this.server = http.createServer((req, res) => {
+          const requestDetails = url.parse(req.url, true);
+          if (requestDetails.pathname === '/create') {
+            let chatRoomId = uuidv4();
+            let chatRoomName = requestDetails.query.name ? requestDetails.query.name : 'default';
+            this.rooms[chatRoomId] = new ChatRoom(chatRoomId, chatRoomName);
+            res.writeHead(302, { 'Location': 'http://localhost:8080/chat.html?id='+chatRoomId });
+            res.end();
+          } else {
+            res.writeHead(404, {'Content-Type': 'text/html'});
+            res.write('You page was not found');
+            res.end();
+          }
+        });
         this.server.on('upgrade', (this.onUpgrade).bind(this));
         this.server.listen(port)
 
         this.rooms = {};
-    }
-
-    chooseChatRoom(chatRoomId)
-    {
-        if (this.rooms.hasOwnProperty(chatRoomId) === false) {
-            this.rooms[chatRoomId] =  new ChatRoom(chatRoomId, chatRoomId); // TODO: add nchat room name
-            console.log('creating new chatroom: ' + chatRoomId);
-        }
-        return this.rooms[chatRoomId];
     }
 
     onUpgrade(request, socket, head)
@@ -45,8 +50,12 @@ module.exports = class ChatServer {
 
             const requestDetails = url.parse(request.url, true);
             if (requestDetails.pathname === '/join') {
-              let chatRoomId = requestDetails.query.room ? requestDetails.query.room : 'default';
-              let chatRoom = this.chooseChatRoom(chatRoomId);
+              let chatRoomId = requestDetails.query.id ? requestDetails.query.id : 'default';
+              if (this.rooms.hasOwnProperty(chatRoomId) === false) {
+                socket.destroy();
+                return;
+              }
+              let chatRoom = this.rooms[chatRoomId];
               chatRoom.wss
                 .handleUpgrade(request, socket, head, (ws) => {
                     chatRoom.wss.emit('connection', ws, request, client);
@@ -54,8 +63,6 @@ module.exports = class ChatServer {
             } else {
               socket.destroy();
             }
-        
-            
         });
     }
 

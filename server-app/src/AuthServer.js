@@ -47,7 +47,6 @@ module.exports = class AuthServer {
 
     callback(req, res)
     {
-      console.log(this);
         const request = url.parse(req.url, true);
         const cognitoDomain = `https://${process.env.COGNITO_DOMAIN}/oauth2/token`;
         const cognitoClientId = process.env.COGNITO_CLIENT_ID;
