@@ -7,7 +7,7 @@ import { Socket } from './Socket.js';
     // check authentication
     const user = getUser();
     if (user === null) {
-        window.location.href = 'http://localhost:8001/login';
+        window.location.href = 'http://localhost:8080/api/login';
         return;
     }    
 

@@ -1,37 +1,56 @@
-const url = require('url');
 const http = require('http');
+const nodeStatic = require('node-static');
+const url = require('url');
 const axios = require('axios');
 const qs = require('querystring');
 
-module.exports = class AuthServer {
-    constructor(options) 
-    {
-        this.options = options;
-        this.pathnames = {
-            '/login': this.login,
-            '/callback': this.callback,
-            '/logout': this.logout
-        };
-    }
+const jwt = require('jsonwebtoken');
+const jwkToPem = require('jwk-to-pem');
+const ChatRoom = require('./ChatRoom.js');
+const { v4: uuidv4 } = require('uuid');
 
-    start(port)
+module.exports = class Server
+{
+    constructor()
     {
-        console.log('Starting AuthServer at ' + port);
-        this.createServer().listen(port);
-    }
+        this.jwk = axios.get(`https://cognito-idp.us-east-1.amazonaws.com/${process.env.COGNITO_USER_POOL_ID}/.well-known/jwks.json`)
+            .then((response) => response.data)
+            .catch((error) => console.log(error));
 
-    createServer() 
-    {
-        return http.createServer(
-            (req, res) => {
-                let pathanme = url.parse(req.url, true).pathname;
-                let callback = this.pathnames.hasOwnProperty(pathanme)
-                    ? (this.pathnames[pathanme]).bind(this)
-                    : (this.page404).bind(this);
-                
-                return callback(req, res);
+        this.server = http.createServer((req, res) => {
+            const request = url.parse(req.url, true);
+            if (request.pathname.startsWith('/api/')) {
+                // process api
+                if (request.pathname === '/api/login') {
+                    return this.login(req, res);
+                }
+                if (request.pathname === '/api/callback') {
+                    return this.callback(req, res);
+                }
+                if (request.pathname === '/api/create') {
+                    return this.create(req, res);
+                }
+                return this.page404(req, res);
             }
-        );
+            if (request.pathname.startsWith('/chat/')) {
+                // process websocket in upgrade event
+                return;
+            }
+
+            // process static by default
+            new nodeStatic.Server('./public').serve(req, res)
+                .addListener('error', (err) => {
+                    console.error("Error serving " + req.url + " - " + err.message);
+                    this.page404(req, res);
+                });
+        });
+
+        this.rooms = {};
+    }
+
+    listen(port)
+    {
+        this.server.listen(port)
     }
 
     login(req, res)
@@ -88,9 +107,13 @@ module.exports = class AuthServer {
           });
     }
 
-    logout(req, res)
+    create(req, res)
     {
-        res.writeHead(200, {'Content-Type': 'text/html'});
+        const request = url.parse(req.url, true);
+        let chatRoomId = uuidv4();
+        let chatRoomName = request.query.name ? request.query.name : 'default';
+        this.rooms[chatRoomId] = new ChatRoom(chatRoomId, chatRoomName);
+        res.writeHead(302, { 'Location': 'http://localhost:8080/chat.html?id='+chatRoomId });
         res.end();
     }
 
@@ -100,4 +123,4 @@ module.exports = class AuthServer {
         res.write('You page was not found');
         res.end();
     }
-};
+}
