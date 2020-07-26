@@ -32,6 +32,9 @@ module.exports = class Server
                 if (request.pathname === '/api/create') {
                     return this.create(req, res);
                 }
+                if (request.pathname === '/api/rooms') {
+                    return this.listRooms(req, res);
+                }
                 return this.page404(req, res);
             }
             if (request.pathname.startsWith('/chat/')) {
@@ -177,6 +180,22 @@ module.exports = class Server
         let chatRoomName = request.query.name ? request.query.name : 'default';
         this.rooms[chatRoomId] = new ChatRoom(chatRoomId, chatRoomName);
         res.writeHead(302, { 'Location': 'http://localhost:8080/chat.html?id='+chatRoomId });
+        res.end();
+    }
+
+    listRooms(req, res)
+    {
+        res.writeHead(200, {'Content-Type': 'application/json',});
+        res.write(JSON.stringify({
+            rooms: Object.keys(this.rooms).map(roomId => {
+                let room = this.rooms[roomId];
+                return {
+                    id: room.roomId,
+                    name: room.roomName,
+                    users: room.wss.clients.size
+                }
+            })
+        }));
         res.end();
     }
 

@@ -14,26 +14,18 @@
             <button type="button" class="btn btn-secondary btn-sm" disabled> @<span id="username"></span></button>
             <button type="button" class="btn btn-light btn-sm" id="logoutButton"> logout</button>
         </h3>
-        This page will contain
-        <ul>
-            <li>Overview of chats current user participate in</li>
-            <li>Login prompt if user not logged in</li>
-            <li>Overview of direct contacts available to the user</li>
-            <li>Option to create 1v1 chat room</li>
-            <li>Option to create a group chat room</li>
-        </ul>
-
-        Links
-        <ul>
-            <li><a href="chat.html">General chat</a></li>
-        </ul>
+        <div class="row">
+            <div class="col-6" id="chat-room-list">
+                <h3>Available Rooms</h3>
+            </div>
+        </div>
         
         <hr>
 
-        <form class="input-group mb-3">
+        <form class="input-group mb-3" id="chatroom-form">
             <input type="text" class="form-control" placeholder="Chatroom name" id="chatroom-name" required>
             <div class="input-group-append">
-                <button class="btn btn-outline-secondary" type="button" id="chatroom-button">Create</button>
+                <button class="btn btn-outline-secondary" type="submit">Create</button>
             </div>
         </form>
     </div>
@@ -60,17 +52,27 @@
             });
         }
 
-        $('#chatroom-button').click((event) => {
+        $('#chatroom-form').submit((event) => {
+            event.preventDefault();
+
             let name = $('#chatroom-name');
-            let form = name.closest('form');
-
-            let valid = form.get(0).reportValidity();
-            if (valid === false) {
-                return;
-            }
-
-            // create the chatroom
             window.location.href = 'http://localhost:8080/api/create?name=' + encodeURI(name.val());
+        });
+
+        $.get('http://localhost:8080/api/rooms').then(function(response) {
+            let container = $('#chat-room-list');
+            response.rooms.forEach((room) => {
+                let buttonId = `join-room-${room.id}`;
+                container.append(`
+                    <div class="">
+                        ${room.name} <span class="badge badge-light">${room.users}</span>
+                        <button class="btn btn-success btn-sm" id="${buttonId}">JOIN</button>
+                    </div>
+                `);
+                $('#'+buttonId).click((event) => {
+                    window.location.href="chat.html?id="+room.id;
+                });
+            });
         });
     </script>
 </body>
