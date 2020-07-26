@@ -11,8 +11,10 @@ const { v4: uuidv4 } = require('uuid');
 
 module.exports = class Server
 {
-    constructor()
+    constructor(options)
     {
+        this.options = options;
+
         this.jwk = axios.get(`https://cognito-idp.us-east-1.amazonaws.com/${process.env.COGNITO_USER_POOL_ID}/.well-known/jwks.json`)
             .then((response) => response.data)
             .catch((error) => console.log(error));
@@ -44,7 +46,7 @@ module.exports = class Server
                     this.page404(req, res);
                 });
         });
-
+        this.server.on('upgrade', (this.onUpgrade).bind(this));
         this.rooms = {};
     }
 
@@ -52,6 +54,66 @@ module.exports = class Server
     {
         this.server.listen(port)
     }
+
+    onUpgrade(req, socket, head)
+    {
+        this.authenticate(req, (err, client) => {
+            if (err || !client) {
+                console.log(err, client);
+                socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+                socket.destroy();
+                return;
+            }
+
+            const request = url.parse(req.url, true);
+            if (request.pathname === '/chat/join') {
+              let chatRoomId = request.query.id ? request.query.id : 'default';
+              if (this.rooms.hasOwnProperty(chatRoomId) === false) {
+                socket.destroy();
+                return;
+              }
+              let chatRoom = this.rooms[chatRoomId];
+              chatRoom.wss
+                .handleUpgrade(req, socket, head, (ws) => {
+                    chatRoom.wss.emit('connection', ws, req, client);
+                });
+            } else {
+              socket.destroy();
+            }
+        });
+    }
+
+    authenticate(request, callback)
+    {
+      const idToken = parseCookie(request.headers.cookie, 'id_token');
+      if (!idToken) {
+        callback({error: "No valid token was provided"});
+        return;
+      }
+
+      this.jwk.then((jwk) => {
+        jwt.verify(idToken, jwkToPem(jwk.keys[0]), { algorithms: ['RS256'] }, function(err, decodedToken) {
+          if (err) {
+            return callback({error: err});
+          }
+          // verify the claims
+          if (decodedToken.exp <= (new Date().getTime() / 1000)) {
+            return callback({error: "The token has expired"});
+          }
+          if (decodedToken.aud !== process.env.COGNITO_CLIENT_ID) {
+            return callback({error: "Cognito Audience does not match"});
+          }
+          if (decodedToken.iss !== `https://cognito-idp.us-east-1.amazonaws.com/${process.env.COGNITO_USER_POOL_ID}`) {
+            return callback({error: "Cognito Issuer does not match"});
+          }
+          if (decodedToken.token_use !== 'id') {
+            return callback({error: "Invalid token use"});
+          }
+          // claims OK. finish the handshake
+          callback(null, decodedToken);
+        });
+      });
+    };
 
     login(req, res)
     {
@@ -84,26 +146,27 @@ module.exports = class Server
         axios.post(cognitoDomain, qs.stringify(params), { headers: headers })
           .then((response) => {
             let idToken = response.data.id_token;
-            // let expirationDate = new Date().getTime()/1000 + response.data.expires_in;
             res.writeHead(302, {
                 'Location': this.options.loginRedirect,
-                'Set-Cookie': ['id_token='+idToken]
+                'Set-Cookie': [createSetCookie({
+                    name: 'id_token',
+                    value: idToken,
+                    path:'/'
+                })]
               }
             );
             res.end();
           })
           .catch((error) => {
-            res.writeHead(500, {
-                'Content-Type': 'application/json',
-              }
-            );
-            res.write(JSON.stringify({
-              domain: cognitoDomain,
-              headers: headers,
-              params: params,
-              response: error
-            }));
-            res.end();
+                res.writeHead(500, {'Content-Type': 'application/json',});
+                res.write(JSON.stringify({
+                    domain: cognitoDomain,
+                    headers: headers,
+                    params: params,
+                    response: error
+                }));
+                res.end();
+                console.log(error);
           });
     }
 
@@ -123,4 +186,31 @@ module.exports = class Server
         res.write('You page was not found');
         res.end();
     }
+}
+
+function createSetCookie(options) {
+    return (`${options.name || ''}=${options.value || ''}`)
+        + (options.expires != null ? `; Expires=${options.expires.toUTCString()}` : '')
+        + (options.maxAge != null ? `; Max-Age=${options.maxAge}` : '')
+        + (options.domain != null ? `; Domain=${options.domain}` : '')
+        + (options.path != null ? `; Path=${options.path}` : '')
+        + (options.secure ? '; Secure' : '')
+        + (options.httpOnly ? '; HttpOnly' : '')
+        + (options.sameSite != null ? `; SameSite=${options.sameSite}` : '');
+}
+function parseCookie(cookie, cname) 
+{
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }

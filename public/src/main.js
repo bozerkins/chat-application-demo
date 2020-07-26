@@ -17,7 +17,7 @@ import { Socket } from './Socket.js';
     //create the chat room
     let chatRoom = new ChatRoom(user);
     let overlay = new Overlay();
-    let socket = new Socket("ws://localhost:8000/join?id="+roomId);
+    let socket = new Socket("ws://localhost:8080/chat/join?id="+roomId);
     socket.bindOpen((event) => {
         overlay.hide();
         chatRoom.render();
