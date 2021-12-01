@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "@joeattardi/emoji-button": "^3.1.1",
+    "@joeattardi/emoji-button": "^4.6.2",
     "bootstrap": "^4.5.0",
     "jquery": "^3.5.1",
     "jwt-decode": "^2.2.0",
