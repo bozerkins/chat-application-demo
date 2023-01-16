@@ -1,4 +1,4 @@
-# chat-application-demo
+# Chat Application Demo in NodeJS
 A demo for Coding dummies stream &lt;3
 
 # The structure
